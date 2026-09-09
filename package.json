@@ -1,0 +1,30 @@
+{
+  "name": "fjarlog-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the Icelandic state budget (fjárlög), 2018-2027, with tools to look up and compare line items across years and stages (frumvarp/fjárlög/ríkisreikningur/áætlun).",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "fjarlog-mcp": "build/index.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "tsc --watch"
+  },
+  "files": [
+    "build",
+    "data"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  }
+}
