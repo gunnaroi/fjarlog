@@ -2,4 +2,3 @@ node_modules/
 build/
 scripts/raw/
 *.log
-*.skill
