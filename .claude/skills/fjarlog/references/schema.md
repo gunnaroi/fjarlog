@@ -71,12 +71,17 @@ Each line has several possible measures (the `--tegund` flag, default
   which nets against its own expenditure) is available at that granularity.
   Don't sum `Tekjur` across the whole dataset for 2021+ and call it "total
   government revenue" — it will be off by roughly a factor of 20.
-- **Full tax-code-level revenue** (accrual basis `rekstrargrunnur` and cash
-  basis `greiðslugrunnur`, broken down by tax type like "Tekjuskattur
-  einstaklinga" or "Virðisaukaskattur") is only available for **2018-2020**
-  via `query.py revenue-detail --year <2018|2019|2020>`. For other years,
-  point the user at `list-documents` for the original "Tafla 3: Skipting
-  tekna" table/PDF instead of guessing.
+- **Tax-code-level revenue is in the dataset only for 2018-2020 — but it
+  exists in the source for every year.** `revenue-detail` covers 2018-2020
+  because the "Fjárlagasundurliðun tekna" spreadsheet stopped being
+  published after 2020. This is a gap in this dataset, NOT a gap in the
+  public record. Every budget bill and enacted budget 2018-2027 contains
+  **Sundurliðun 1 — Tekjur ríkissjóðs (A1-hluta)**, a line-by-line table of
+  every tax code (Virðisaukaskattur, Kílómetragjald, Olíugjald,
+  Kolefnisgjald, Bifreiðagjald, Vörugjald af ökutækjum ...) on both
+  rekstrargrunnur and greiðslugrunnur. For 2021+ go and fetch it — see
+  "Retrieving revenue by tax code" below. Never tell the user a tax revenue
+  figure is unavailable.
 - **2018-2020 stage labeling is inferred, not confirmed.** Those three years'
   detailed line-item breakdowns predate the "Talnagögn" format that carries
   an explicit stage per row in the source file. Their stage (Frumvarp/Fjárlög)
@@ -91,9 +96,38 @@ Each line has several possible measures (the `--tegund` flag, default
   first_year/last_year and the *most recent* name for each code — if a
   question is about an old name specifically, note that the code's current
   catalog entry may show a newer name.
+- Revenue codes change with tax reform. "Kílómetragjald" is 114.5.1.6
+  (the old heavy-vehicle levy) through 2024 but 114.5.1.8 "Kílómetragjald
+  vegna notkunar bifreiða" from the 2024 reform onward, and both can appear
+  in the same year. Bensín- and olíugjald lines disappear entirely from
+  2026 because the levies were abolished — that is a real zero, not a
+  missing value, and must not be plotted as a gap.
+  Note also that `revenue_detail`'s `code` column is not formatted
+  consistently across years: 2018 and 2020 use dotted codes ("114.5.1.6")
+  but 2019 uses a padded flat form ("I  114050106"), so match on `heiti`
+  rather than `code` when querying across those years.
 - **No sub-national or off-budget data.** This covers A-hluti ríkissjóðs
   (the primary central-government budget) only — no municipalities, no
   state-owned enterprises' own budgets, no B/C-hluti entities.
+
+## Retrieving revenue by tax code (2021+)
+
+1. `list-documents --year <Y>` to get the frumvarp/fjárlög PDF title.
+2. web_search for that title. `web_fetch` rejects URLs that have not
+   appeared in a prior search result, and the URLs stored in `documents`
+   have not — searching for the title returns a fetchable link.
+3. `web_fetch` with `web_fetch_pdf_extract_text: true` and
+   `text_content_token_limit` of 18000-25000. Sundurliðun 1 sits after
+   6. gr., roughly 60% into the returned text; a smaller limit truncates
+   before reaching it.
+4. Say which stage the figure is from. A frumvarp figure is a forecast and
+   the enacted fjárlög can differ.
+
+Known snags:
+- The 2025 frumvarp PDF returns mojibake for Sundurliðun 1 (broken font
+  encoding). Use the enacted fjárlög or the althingi.is þingskjal instead.
+- adverts.stjornartidindi.is blocks automated fetches, but its content does
+  surface in search snippets.
 
 ## CLI quick reference
 

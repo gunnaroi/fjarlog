@@ -71,6 +71,9 @@ of `references/schema.md` — e.g. `query.py sql "SELECT DISTINCT raduneyti_nafn
   government revenue" for 2021+ — see the limitations section in
   `references/schema.md`, this dataset only has that for expenditure lines'
   own small self-generated revenue.
+- Don't tell the user a tax revenue figure is unavailable just because
+  `revenue-detail` stops at 2020. The dataset's boundary is not the answer's
+  boundary — see "Retrieving revenue by tax code" in references/schema.md.
 - Don't report a number without saying which year *and* which stage it's for
   — "spending on X" is ambiguous between the original bill, the enacted law,
   and the final actual outturn, and they can differ by double-digit percent.
