@@ -112,20 +112,41 @@ Each line has several possible measures (the `--tegund` flag, default
 
 ## Retrieving revenue by tax code (2021+)
 
+**Do not ask the PDF-fetching tool to read the table for you.** These bills
+are ~8MB and the fetch tool hands the raw stream to a small model, which
+reports mojibake even for documents that extract perfectly. Download the
+file and extract the text locally instead:
+
 1. `list-documents --year <Y>` to get the frumvarp/fjárlög PDF title.
-2. web_search for that title. `web_fetch` rejects URLs that have not
-   appeared in a prior search result, and the URLs stored in `documents`
-   have not — searching for the title returns a fetchable link.
-3. `web_fetch` with `web_fetch_pdf_extract_text: true` and
-   `text_content_token_limit` of 18000-25000. Sundurliðun 1 sits after
-   6. gr., roughly 60% into the returned text; a smaller limit truncates
-   before reaching it.
-4. Say which stage the figure is from. A frumvarp figure is a forecast and
+2. Web-search that title to get the real URL. The URLs stored in
+   `documents` are `library/?itemid=...` redirect links intended for
+   citation, not direct file paths; the search result gives the actual
+   `.../Fjarlagafrumvarp...pdf` under
+   `stjornarradid.is/library/03-Verkefni/Efnahagsmal-og-opinber-fjarmal/`.
+3. Download it (`curl -sSL -o <f>.pdf <url>`) and extract with layout
+   preserved: `pdftotext -layout <f>.pdf <f>.txt`. `pdftotext` may not be
+   installed — `apt-get update && apt-get install -y poppler-utils`. Do not
+   reach for `pypdf` in this image; its `cryptography` dependency is broken.
+4. `grep -n "Sundurliðun 1" <f>.txt` to find the table, then read forward.
+   Codes are in column 1, heiti next, then two amount columns —
+   rekstrargrunnur and greiðslugrunnur, in m.kr.
+5. Say which stage the figure is from. A frumvarp figure is a forecast and
    the enacted fjárlög can differ.
 
+Verified example (2026 frumvarp): `114.1.1 Virðisaukaskattur 465.600,0 /
+460.800,0`, `114.5.1.8 Kílómetragjald vegna notkunar bifreiða 37.056,5`,
+`114.2.2.4 Kolefnisgjald 14.530,0`.
+
 Known snags:
-- The 2025 frumvarp PDF returns mojibake for Sundurliðun 1 (broken font
-  encoding). Use the enacted fjárlög or the althingi.is þingskjal instead.
+- **The 2025 frumvarp PDF is genuinely unreadable** for Sundurliðun 1 —
+  broken font encoding, and `pdftotext` cannot recover it either (the
+  surrounding prose extracts fine, only the table pages are scrambled).
+  Use the enacted fjárlög or the althingi.is þingskjal for 2025.
+- A mojibake report from the *fetch tool* proves nothing about the
+  document; confirm with `pdftotext` before believing a year is unreadable.
+- The greinargerð near the end of each bill carries a summary table
+  comparing the last three years per tax type — useful as a cross-check,
+  and it shows abolished levies explicitly as 0.
 - adverts.stjornartidindi.is blocks automated fetches, but its content does
   surface in search snippets.
 
